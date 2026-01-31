@@ -1,3 +1,17 @@
+/**
+ * Cashu-NWC Bridge
+ * 
+ * This application acts as a bridge between the Nostr network (via NWC and npub.cash) and a Cashu Mint.
+ * It is designed to be usable by human users and Autonomous AI Agents.
+ * 
+ * Capabilities:
+ * 1. MINT WRAPPER: Turns a Cashu Mint into a Lightning Wallet via NWC (Nostr Wallet Connect).
+ * 2. SWEEPER: Monitors an npub.cash address for incoming payments (zaps) and sweeps them to the Cashu Mint.
+ * 3. PERSISTENCE: Saves wallet state (UTXOs, NWC secrets) to disk for recovery.
+ * 
+ * @module CashuNWCBridge
+ */
+
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -8,18 +22,31 @@ const WebSocket = require('ws');
 const { nip19, getPublicKey } = require('nostr-tools');
 const crypto = require('crypto');
 
-// Polyfills
+// Polyfills for Node.js environment
 global.WebSocket = WebSocket;
 global.crypto = crypto;
 
-// Configuration
+// Configuration Constants
 const CONFIG_FILE = path.resolve(__dirname, 'config.json');
 const DB_FILE = path.resolve(__dirname, 'db.json');
 const DEFAULT_MINT = "https://mint.minibits.cash/Bitcoin";
 const NPUB_CASH_URL = "https://npub.cash"; // Assumed Mint URL for npub.cash
 
-// Load or Create Config
+/**
+ * Global Configuration Object.
+ * AI Agents should read/write `config.json` to configure the application.
+ * 
+ * @typedef {Object} Config
+ * @property {string} npub_privkey - The Nostr Private Key (nsec or hex) of the agent. Used to authenticate with npub.cash.
+ * @property {string} mint_url - The URL of the Cashu Mint to use for the main wallet.
+ * @property {string} npub_cash_url - The URL of the npub.cash service (defaults to https://npub.cash).
+ * @property {string} [nwc_relay] - The Relay URL to use for NWC communication (defaults to wss://relay.damus.io).
+ * @property {number} sweep_interval_ms - Interval in milliseconds to check for new funds on npub.cash.
+ * @property {number} min_balance_to_sweep - Minimum balance (in sats) required to trigger a sweep.
+ */
 let config = {};
+
+// Load or Create Config
 if (fs.existsSync(CONFIG_FILE)) {
     config = JSON.parse(fs.readFileSync(CONFIG_FILE));
 } else {
@@ -35,7 +62,10 @@ if (fs.existsSync(CONFIG_FILE)) {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
-// Persistence for Bankify
+/**
+ * Loads the application state (UTXOs, NWC connections) from `db.json`.
+ * AI Agents can inspect `db.json` to view current wallet balance and active NWC connections.
+ */
 function loadState() {
     if (fs.existsSync(DB_FILE)) {
         try {
@@ -49,6 +79,10 @@ function loadState() {
     }
 }
 
+/**
+ * Saves the current application state to `db.json`.
+ * This should be called periodically or after significant state changes.
+ */
 function saveState() {
     const data = {
         utxos: bankify.state.utxos,
@@ -66,7 +100,18 @@ function getHexKey(nsec) {
     return nsec;
 }
 
-// Sweeper
+/**
+ * Periodically checks the npub.cash service for paid quotes (incoming zaps).
+ * If new funds are found, it attempts to "sweep" them into the local Cashu wallet defined in `config.mint_url`.
+ * 
+ * Logic:
+ * 1. Authenticate with npub.cash using the configured `npub_privkey`.
+ * 2. Fetch all quotes (invoices) associated with the user.
+ * 3. Identify PAID quotes that haven't been processed locally (TODO: Tracking processed quotes).
+ * 4. [Future Implementation] Use the tokens/proofs from npub.cash to mint new tokens on the main mint.
+ * 
+ * @async
+ */
 async function runSweeper() {
     if (config.npub_privkey === "nsec1...") {
         console.log("[Sweeper] Please set your npub_privkey in config.json");
