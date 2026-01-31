@@ -7,7 +7,8 @@
         "cashu-nwc": "./bin/cashu-nwc.js"
     },
     "scripts": {
-        "start": "node bin/cashu-nwc.js"
+        "start": "node bin/cashu-nwc.js",
+        "test": "jest"
     },
     "files": [
         "bin",
@@ -30,14 +31,17 @@
     "license": "MIT",
     "dependencies": {
         "@cashu/cashu-ts": "^3.2.2",
+        "@gandlaf21/blind-signature": "^1.0.7",
         "bolt11": "^1.4.1",
         "browserify-cipher": "^1.0.1",
         "dotenv": "^16.4.5",
         "noble-secp256k1": "^1.2.14",
-        "nostr-tools": "^2.19.4",
+        "nostr-tools": "^1.17.0",
         "npubcash-sdk": "^0.3.2",
-        "ws": "^8.18.0",
-        "@gandlaf21/blind-signature": "^1.0.7"
+        "ws": "^8.18.0"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0"
     },
     "engines": {
         "node": ">=18"
