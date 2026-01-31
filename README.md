@@ -19,30 +19,29 @@ This repository is designed to be easily consumed and configured by AI Agents.
     git clone <repo_url>
     cd cashu-nwc-bridge
     npm install
+    # Link binary
+    npm link
     ```
 
-2.  **Configuration (`config.json`)**:
-    The application reads from `config.json`. If it doesn't exist, run `node index.js` once to generate it, or create it programmatically:
-    ```json
-    {
-      "npub_privkey": "nsec1...",        // YOUR Nostr Private Key (Be careful!)
-      "mint_url": "https://mint.minibits.cash/Bitcoin", // Target Mint
-      "npub_cash_url": "https://npub.cash", // npub.cash service
-      "nwc_relay": "wss://relay.damus.io",  // Relay for NWC commands
-      "sweep_interval_ms": 60000,           // Check interval (ms)
-      "min_balance_to_sweep": 100           // Minimum sats to sweep
-    }
+2.  **Configuration**:
+    Use Environment Variables to configure the agent securely (see `SECURITY.md`).
+    ```bash
+    export NPUB_PRIVKEY="nsec1..."
+    export MINT_URL="https://mint.minibits.cash/Bitcoin"
+    export NWC_RELAY="wss://relay.damus.io"
     ```
 
-3.  **State Management (`db.json`)**:
-    Wallet state (UTXOs) and NWC connection strings are stored in `db.json`.
-    - **Reading NWC String**: An agent can read `db.json` to find the `nwc_string`.
-    ```javascript
-    // Example: Reading NWC secret programmatically
-    const db = require('./db.json');
-    const pubkeys = Object.keys(db.nwc_info);
-    const connectionString = db.nwc_info[pubkeys[0]].nwc_string;
-    console.log("NWC Connection:", connectionString);
+3.  **Operation**:
+    Start the bridge and assume a background process.
+    ```bash
+    cashu-nwc start &
+    ```
+
+4.  **State Inspection**:
+    Use the machine-readable `status` command to get the connection string.
+    ```bash
+    cashu-nwc status
+    # Returns JSON: { "nwc_connection_string": "..." }
     ```
 
 ### Capabilities for Agents
@@ -58,36 +57,93 @@ This repository is designed to be easily consumed and configured by AI Agents.
 
 ```bash
 npm install
+npm link # Optional: makes 'cashu-nwc' command available globally
 ```
 
 ### Quick Start
 
 1.  Run the bridge:
     ```bash
-    node index.js
+    cashu-nwc start
     ```
-2.  Edit `config.json` with your details (especially `npub_privkey` if you want to sweep earnings).
-3.  Restart: `node index.js`.
-4.  Copy the **NWC Connection String** printed in the console.
-5.  Paste it into your Nostr Client (Damus, Amethyst, Primal, etc.).
-
-### Mints
-
-A list of recommended mints is available in `mints.json`. You can change your mint in `config.json`.
+    *(Or `node bin/cashu-nwc.js start` if you didn't link)*
+    
+2.  **Configuration**: On first run, a `config.json` is generated. Edit it with your `npub_privkey` if you want to sweep earnings.
+3.  **Connection**: Copy the **NWC Connection String** printed in the console.
+4.  **Usage**: Paste it into your Nostr Client (Damus, Amethyst, Primal, etc.) to pay invoices using your Cashu balance.
 
 ---
 
-## Technical Details
+## ☁️ Deployment & Hosting
 
--   **Bankify Integration**: Uses [Bankify](https://github.com/supertestnet/bankify) to provide the NWC layer. We patched it to support persistent storage (`db.json`) instead of in-memory only.
--   **Npub.cash SDK**: Uses the [npubcash-sdk](https://github.com/cashubtc/npubcash-sdk) to monitor incoming payments.
--   **Persistence**: All Cashu UTXOs and NWC secrets are saved to `db.json`. Backup this file!
+This bridge is a **client-side application**. It connects *outbound* to Nostr Relays and Cashu Mints.
+
+### Hosting Requirements
+-   **No Open Ports**: You do **NOT** need to open any ports (port forwarding) or have a static IP. It works behind NATs, firewalls, and on home internet.
+-   **Always-On**: The bridge must be running to receive NWC commands (pay invoices) and sweep funds. A VPS is recommended for reliability.
+-   **Resources**: Very low resource usage (< 256MB RAM). Can run on a free-tier VPS (AWS t2.micro, Oracle Cloud, etc.) or a Raspberry Pi.
+
+### VPS Setup Guide (Ubuntu/Debian)
+
+1.  **Install Node.js (v18+)**:
+    ```bash
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    ```
+
+2.  **Install Process Manager (PM2)**:
+    We use PM2 to keep the bridge running in the background and restart it if it crashes or the server reboots.
+    ```bash
+    sudo npm install -g pm2
+    ```
+
+3.  **Setup Bridge**:
+    ```bash
+    git clone <repo_url>
+    cd cashu-nwc-bridge
+    npm install
+    
+    # Set your keys (RECOMMENDED: Add to ~/.bashrc for persistence)
+    export NPUB_PRIVKEY="nsec1..."
+    
+    # Start with PM2
+    pm2 start bin/cashu-nwc.js --name "cashu-bridge" -- start
+    
+    # Save PM2 list to respawn on reboot
+    pm2 save
+    pm2 startup
+    ```
+
+4.  **Monitor**:
+    ```bash
+    pm2 logs cashu-bridge
+    pm2 status
+    ```
+
+---
+
+## 🏗️ Architecture & Services
+
+The bridge relies on the following external services. You do not need to host these yourself, but you rely on their availability.
+
+1.  **Nostr Relays** (`wss://relay.damus.io`, etc.):
+    -   **Usage**: Used for Non-Custodial Wallet Connect (NWC) communication. The bridge listens for ephemeral events (commands) from your wallet app.
+    -   **Config**: `nwc_relay` in `config.json`.
+    
+2.  **Cashu Mint** (e.g., Minibits, Nutstash):
+    -   **Usage**: The actual custodian of funds (blinded). The bridge "melts" tokens here to pay Lightning invoices.
+    -   **Config**: `mint_url` in `config.json`.
+    
+3.  **npub.cash**:
+    -   **Usage**: A 3rd-party service that allows anyone to pay a generic Lightning Address (`<pubkey>@npub.cash`) and holds the funds for you to claim.
+    -   **Role**: The bridge "Sweeps" funds from here into your separate Cashu Mint.
+
+---
 
 ## Security
 
 **Please read [SECURITY.md](SECURITY.md) for detailed security practices.**
 
--   **Private Keys**: `config.json` contains your Nostr private key. `db.json` contains your NWC secret execution keys and Cashu tokens (money). **Protect these files.**
+-   **Private Keys**: `db.json` contains your NWC secret execution keys and Cashu tokens (money). **Protect these files.**
 -   **Environment Variables**: We strongly recommend using Environment Variables (`NPUB_PRIVKEY`) instead of `config.json` for key management.
 -   **Self-Host**: Run this on a server you control.
-
