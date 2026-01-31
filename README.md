@@ -85,6 +85,9 @@ A list of recommended mints is available in `mints.json`. You can change your mi
 
 ## Security
 
+**Please read [SECURITY.md](SECURITY.md) for detailed security practices.**
+
 -   **Private Keys**: `config.json` contains your Nostr private key. `db.json` contains your NWC secret execution keys and Cashu tokens (money). **Protect these files.**
+-   **Environment Variables**: We strongly recommend using Environment Variables (`NPUB_PRIVKEY`) instead of `config.json` for key management.
 -   **Self-Host**: Run this on a server you control.
 
