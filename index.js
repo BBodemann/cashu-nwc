@@ -193,7 +193,16 @@ async function runSweeper() {
     }
 }
 
-// Main Loop
+/**
+ * Main Entry Point
+ * 
+ * 1. Loads persisted state (wallet connection, NWC strings).
+ * 2. Initializes Bankify (Cashu-NWC wrapper).
+ * 3. Starts the persistence loop (autosave).
+ * 4. Starts the Sweeper loop (npub.cash monitor).
+ * 
+ * @async
+ */
 async function main() {
     loadState();
 

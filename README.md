@@ -1,49 +1,90 @@
-# Cashu NWC Bridge with Auto-Sweep
+# Cashu-NWC Bridge & Sweeper
 
-This project allows you to:
-1.  Receive Lightning payments via `npub.cash` (using your Nostr Pubkey).
-2.  Periodically sweep those payments into a self-custodial Cashu Mint of your choice.
-3.  Use the resulting Cashu tokens to power a Nostr Wallet Connect (NWC) interface, allowing you to pay Lightning invoices from NWC-enabled apps (like Damus, Amethyst, Zapple Pay) using your Cashu balance.
+This project provides a **bridge** between the Nostr network and Cashu Mint ecosystems. It allows you to:
+1.  **Receive Lightning Payments**: Use `npub.cash` to receive payments to your Nostr Public Key.
+2.  **Sweep Funds**: Automatically sweep these incoming funds into a high-performance Cashu Mint.
+3.  **Spend via NWC**: Use the swept Cashu tokens to fund a Nostr Wallet Connect (NWC) interface, allowing you to pay Lightning invoices from any NWC-compatible app (Damus, Amethyst, etc.) or AI Agent.
 
-## Setup
+---
 
-1.  **Install Dependencies**:
+## 🤖 For Autonomous AI Agents
+
+This repository is designed to be easily consumed and configured by AI Agents.
+
+### Setup Protocol for Agents
+
+1.  **Repository Initialization**:
+    Clone the repo and install dependencies.
     ```bash
+    git clone <repo_url>
+    cd cashu-nwc-bridge
     npm install
     ```
 
-2.  **Configuration**:
-    The first time you run the app, it creates `config.json`.
+2.  **Configuration (`config.json`)**:
+    The application reads from `config.json`. If it doesn't exist, run `node index.js` once to generate it, or create it programmatically:
+    ```json
+    {
+      "npub_privkey": "nsec1...",        // YOUR Nostr Private Key (Be careful!)
+      "mint_url": "https://mint.minibits.cash/Bitcoin", // Target Mint
+      "npub_cash_url": "https://npub.cash", // npub.cash service
+      "nwc_relay": "wss://relay.damus.io",  // Relay for NWC commands
+      "sweep_interval_ms": 60000,           // Check interval (ms)
+      "min_balance_to_sweep": 100           // Minimum sats to sweep
+    }
+    ```
+
+3.  **State Management (`db.json`)**:
+    Wallet state (UTXOs) and NWC connection strings are stored in `db.json`.
+    - **Reading NWC String**: An agent can read `db.json` to find the `nwc_string`.
+    ```javascript
+    // Example: Reading NWC secret programmatically
+    const db = require('./db.json');
+    const pubkeys = Object.keys(db.nwc_info);
+    const connectionString = db.nwc_info[pubkeys[0]].nwc_string;
+    console.log("NWC Connection:", connectionString);
+    ```
+
+### Capabilities for Agents
+
+-   **Self-Funding Wallet**: By pointing `npub.cash` to your agent's pubkey, you can receive unconditional payments (zaps). This tool will automatically catch them and convert them to spendable Cashu tokens.
+-   **Payment Interface**: The NWC interface allows the agent (or other apps) to request Lightning Invoice payments. The bridge creates the payment by melting Cashu tokens.
+
+---
+
+## 👨‍💻 For Human Users
+
+### Installation
+
+```bash
+npm install
+```
+
+### Quick Start
+
+1.  Run the bridge:
     ```bash
     node index.js
     ```
-    (It effectively exits or fails if keys are missing).
+2.  Edit `config.json` with your details (especially `npub_privkey` if you want to sweep earnings).
+3.  Restart: `node index.js`.
+4.  Copy the **NWC Connection String** printed in the console.
+5.  Paste it into your Nostr Client (Damus, Amethyst, Primal, etc.).
 
-    Edit `config.json`:
-    - `npub_privkey`: Your Nostr Private Key (`nsec...`). This is used to authenticate with `npub.cash` to sweep funds.
-    - `mint_url`: The Cashu Mint URL you want to use for your wallet (e.g. `https://mint.minibits.cash/Bitcoin`). See `mints.json` for suggestions.
-    - `npub_cash_url`: URL of the npub.cash service (default `https://npub.cash`).
-    - `sweep_interval_ms`: How often to check for new funds (default 60000ms).
+### Mints
 
-3.  **Run**:
-    ```bash
-    node index.js
-    ```
+A list of recommended mints is available in `mints.json`. You can change your mint in `config.json`.
 
-4.  **Connect NWC**:
-    Address the output "NWC CONNECTION STRING" in your terminal. Copy this string (starting with `nostr+walletconnect://...`) connection string to your NWC-enabled app.
+---
 
-## How it works
+## Technical Details
 
-- **Sweeper**: Checks `npub.cash` for paid quotes (incoming payments). If found, it "swaps" the tokens from `npub.cash` to your chosen `mint_url`.
-- **Bankify**: Acts as an NWC Provider. It listens for payment requests from your NWC apps. When a request comes in, it pays the Lightning invoice using the Cashu tokens stored in your local DB (`db.json`).
+-   **Bankify Integration**: Uses [Bankify](https://github.com/supertestnet/bankify) to provide the NWC layer. We patched it to support persistent storage (`db.json`) instead of in-memory only.
+-   **Npub.cash SDK**: Uses the [npubcash-sdk](https://github.com/cashubtc/npubcash-sdk) to monitor incoming payments.
+-   **Persistence**: All Cashu UTXOs and NWC secrets are saved to `db.json`. Backup this file!
 
-## Mints
+## Security
 
-See `mints.json` for a list of Cashu mints with API support.
+-   **Private Keys**: `config.json` contains your Nostr private key. `db.json` contains your NWC secret execution keys and Cashu tokens (money). **Protect these files.**
+-   **Self-Host**: Run this on a server you control.
 
-## Security Note
-
-- Your Nostr Private Key (`nsec`) is stored in `config.json`. Ensure this file is secure.
-- Your Cashu tokens are stored in `db.json` and `config.json`.
-- The `npub.cash` sweep logic assumes specific behavior from the `npub.cash` service (acting as a mint).
