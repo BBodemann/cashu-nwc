@@ -1,0 +1,17 @@
+[
+    {
+        "url": "https://mint.minibits.cash/Bitcoin",
+        "name": "Minibits",
+        "description": "Popular, stable mint."
+    },
+    {
+        "url": "https://8333.space:3338",
+        "name": "8333.space",
+        "description": "High liquidity mint."
+    },
+    {
+        "url": "https://mint.gandlaf.com",
+        "name": "Gandlaf",
+        "description": "Development mint."
+    }
+]

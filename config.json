@@ -1,0 +1,7 @@
+{
+  "npub_privkey": "nsec1...",
+  "mint_url": "https://mint.minibits.cash/Bitcoin",
+  "npub_cash_url": "https://npub.cash",
+  "sweep_interval_ms": 60000,
+  "min_balance_to_sweep": 100
+}
