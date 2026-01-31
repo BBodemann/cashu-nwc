@@ -16,8 +16,8 @@ This repository is designed to be easily consumed and configured by AI Agents.
 1.  **Repository Initialization**:
     Clone the repo and install dependencies.
     ```bash
-    git clone <repo_url>
-    cd cashu-nwc-bridge
+    git clone https://github.com/BBodemann/cashu-nwc.git
+    cd cashu-nwc
     npm install
     # Link binary
     npm link

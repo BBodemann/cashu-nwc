@@ -3,6 +3,10 @@
     "version": "1.1.0",
     "description": "NWC-enabled Lightning Wallet Bridge using Cashu and npubx.cash (Coco)",
     "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/BBodemann/cashu-nwc.git"
+    },
     "bin": {
         "cashu-nwc": "./bin/cashu-nwc.js"
     },

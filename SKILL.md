@@ -15,8 +15,8 @@ This skill allows you to operate a self-custodial Lightning Wallet powered by Ca
 ## Installation
 
 ```bash
-git clone https://github.com/your-repo/cashu-nwc-bridge.git
-cd cashu-nwc-bridge
+git clone https://github.com/BBodemann/cashu-nwc.git
+cd cashu-nwc
 npm install
 npm link
 # Now you can run `cashu-nwc` directly
