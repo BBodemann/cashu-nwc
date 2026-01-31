@@ -7,7 +7,7 @@ const { CashuNWCBridge } = require('../lib/bridge');
 // CLI Constants
 const CONFIG_FILE = path.resolve(process.cwd(), 'config.json');
 const DEFAULT_MINT = "https://mint.minibits.cash/Bitcoin";
-const NPUB_CASH_URL = "https://npub.cash";
+const NPUB_CASH_URL = "https://npubx.cash";
 
 async function main() {
     console.log("Starting Cashu-NWC Bridge CLI...");

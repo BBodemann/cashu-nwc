@@ -1,19 +1,24 @@
 const fs = require('fs');
 const path = require('path');
-const { CashuNWCBridge, bankify } = require('../lib/bridge');
 
-// Mock dependencies
+// Mock dependencies BEFORE requiring modules
 jest.mock('fs');
-jest.mock('npubcash-sdk', () => ({
-    NPCClient: jest.fn(),
-    JWTAuthProvider: jest.fn(),
-    ConsoleLogger: jest.fn()
-}));
+jest.mock('../lib/coco.js');
+jest.mock('coco-cashu-core', () => ({ initializeCoco: jest.fn() }));
+jest.mock('coco-cashu-plugin-npc', () => ({ NPCPlugin: jest.fn() }));
+jest.mock('coco-cashu-sqlite3', () => ({ SqliteRepositories: jest.fn() }));
+jest.mock('sqlite3', () => ({ Database: jest.fn() }));
+jest.mock('@scure/bip39', () => ({ mnemonicToSeed: jest.fn() }));
+
 jest.mock('@cashu/cashu-ts', () => ({
     CashuMint: jest.fn(),
     CashuWallet: jest.fn()
 }));
 jest.mock('ws');
+
+// Now require the module under test
+const { CashuNWCBridge, bankify } = require('../lib/bridge');
+const { CocoReceiver } = require('../lib/coco.js');
 
 // Mock bankify (partially)
 bankify.state = {
@@ -23,13 +28,15 @@ bankify.state = {
         sockets: {}
     }
 };
+// Helper to avoid actual network calls in createNWCconnection if triggered
+bankify.createNWCconnection = jest.fn().mockResolvedValue("nostr+walletconnect://mock");
 
 describe('CashuNWCBridge', () => {
     let bridge;
     const mockConfig = {
         npub_privkey: "nsec1mock",
         mint_url: "https://mock.mint",
-        npub_cash_url: "https://mock.npub.cash",
+        npub_cash_url: "https://mock.npubx.cash",
         nwc_relay: "wss://mock.relay",
         sweep_interval_ms: 1000,
         min_balance_to_sweep: 100
@@ -98,12 +105,24 @@ describe('CashuNWCBridge', () => {
 
     test('getHexKey should decode nsec correctly', () => {
         bridge = new CashuNWCBridge(mockConfig);
-        // nsec1j4c6269y9w0q2er2xjw8sv2ehyj2d33q655x42s5n5w6g6x2c6qq0y4x4
-        // corresponds to hex: 5c2d6d098c4713c7723906aa7c2448342743956793e230787479637c2237ec16
-        // We'll trust the method logic without a real reliable nsec generator in test env unless needed.
-        // Let's just test that it returns input if not nsec
-
         const hex = "5c2d6d098c4713c7723906aa7c2448342743956793e230787479637c2237ec16";
         expect(bridge.getHexKey(hex)).toBe(hex);
+    });
+
+    test('start() should initialize CocoReceiver', async () => {
+        // Setup mock implementation for this test
+        const mockStart = jest.fn();
+        CocoReceiver.mockImplementation(() => ({
+            start: mockStart
+        }));
+
+        bridge = new CashuNWCBridge(mockConfig, mockDbPath);
+        bridge.loadState = jest.fn();
+        bridge.saveState = jest.fn();
+
+        await bridge.start();
+
+        expect(CocoReceiver).toHaveBeenCalledWith(mockConfig, expect.any(Function));
+        expect(mockStart).toHaveBeenCalled();
     });
 });

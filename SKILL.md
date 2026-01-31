@@ -8,7 +8,7 @@ description: A tool to create a Lightning Network wallet using Cashu and expose 
 This skill allows you to operate a self-custodial Lightning Wallet powered by Cashu eCash.
 
 ## Capabilities
-1.  **Receive Payments**: Funds sent to your Nostr Pubkey (via npub.cash) are automatically swept into your wallet.
+1.  **Receive Payments**: Funds sent to your Nostr Pubkey (via `npubx.cash`) are automatically received by the embedded `Coco` wallet.
 2.  **Pay Invoices**: Use the generated NWC connection string to pay Lightning invoices.
 3.  **Check Status**: Programmatically verify wallet balance and connection status.
 
@@ -18,7 +18,8 @@ This skill allows you to operate a self-custodial Lightning Wallet powered by Ca
 git clone https://github.com/your-repo/cashu-nwc-bridge.git
 cd cashu-nwc-bridge
 npm install
-chmod +x bin/cashu-nwc.js
+npm link
+# Now you can run `cashu-nwc` directly
 ```
 
 ## Configuration
@@ -30,6 +31,7 @@ You MUST provide configuration via Environment Variables to avoid saving sensiti
 | `NPUB_PRIVKEY` | Your Nostr Private Key (`nsec` or hex). Used to authenticate. | Yes |
 | `MINT_URL` | Cashu Mint URL (see `mints.json`). | No (Default: Minibits) |
 | `NWC_RELAY` | Relay for NWC commands. | No (Default: Damus) |
+| `NPUB_CASH_URL` | payment gateway URL. | No (Default: npubx.cash) |
 
 ## Agent Protocols
 
@@ -85,9 +87,16 @@ To get your NWC Connection String (to use in other apps) or check your balance, 
 
 1.  **Init**: Install and `start` the bridge.
 2.  **Connect**: Run `status` to get the `nwc_connection_string`.
-3.  **Fund**: Send Lightning/Zaps to your npub.cash address (`<your_npub>@npub.cash`).
-4.  **Wait**: The bridge will sweep funds (default every 60s).
-5.  **Spend**: Use a NWC client (or library) with the `nwc_connection_string` to pay invoices.
+3.  **Fund**: Send Lightning/Zaps to your npubx.cash address (`<your_npub>@npubx.cash`).
+4.  **Wait**: The `Coco` receiver will detect the payment and log it (funds held in `coco.db`).
+5.  **Spend**: Use a NWC client (or library) with the `nwc_connection_string` to pay invoices (funds drawn from `db.json` via Bankify).
+
+## Framework & Libraries
+This bridge composes two powerful libraries:
+-   **Coco (`coco-cashu-core`)**: Handles the **Receiving** side. It uses the `npubx.cash` protocol to turn your Nostr Pubkey into a Lightning Address.
+-   **Bankify (`supertestnet/bankify`)**: Handles the **Spending** side. It turns a Cashu Mint connection into a NWC-compatible wallet.
+
+**Note**: Currently, `Coco` and `Bankify` maintain separate database files (`coco.db` and `db.json`). Future versions may unify these. For now, ensure *both* files are backed up.
 
 ## Troubleshooting
 

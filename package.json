@@ -1,7 +1,7 @@
 {
     "name": "cashu-nwc-bridge",
-    "version": "1.0.0",
-    "description": "NWC-enabled Lightning Wallet Bridge using Cashu and npub.cash",
+    "version": "1.1.0",
+    "description": "NWC-enabled Lightning Wallet Bridge using Cashu and npubx.cash (Coco)",
     "main": "index.js",
     "bin": {
         "cashu-nwc": "./bin/cashu-nwc.js"
@@ -15,29 +15,32 @@
         "lib",
         "index.js",
         "mints.json",
-        "README.md"
+        "README.md",
+        "SKILL.md"
     ],
     "keywords": [
         "cashu",
         "nostr",
         "nwc",
         "lightning",
-        "bitcoin",
-        "ecash",
-        "npub.cash",
-        "wallet"
+        "coco",
+        "npub.cash"
     ],
     "author": "",
     "license": "MIT",
     "dependencies": {
         "@cashu/cashu-ts": "^3.2.2",
         "@gandlaf21/blind-signature": "^1.0.7",
+        "@scure/bip39": "^1.1.0",
         "bolt11": "^1.4.1",
         "browserify-cipher": "^1.0.1",
+        "coco-cashu-core": "rc",
+        "coco-cashu-plugin-npc": "*",
+        "coco-cashu-sqlite3": "rc",
         "dotenv": "^16.4.5",
         "noble-secp256k1": "^1.2.14",
         "nostr-tools": "^1.17.0",
-        "npubcash-sdk": "^0.3.2",
+        "sqlite3": "^5.1.7",
         "ws": "^8.18.0"
     },
     "devDependencies": {
