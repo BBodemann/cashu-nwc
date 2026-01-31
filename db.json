@@ -1,0 +1,24 @@
+{
+  "utxos": [],
+  "nwc_info": {
+    "858267457757a987193d5aba45ed087aa0b08a1cfbf3524e3b3943f398c9689c": {
+      "permissions": [
+        "pay_invoice",
+        "get_balance",
+        "make_invoice",
+        "lookup_invoice",
+        "list_transactions",
+        "get_info"
+      ],
+      "mymint": "https://mint.minibits.cash/Bitcoin",
+      "nwc_string": "nostr+walletconnect://858267457757a987193d5aba45ed087aa0b08a1cfbf3524e3b3943f398c9689c?relay=wss://relay.damus.io&secret=7dc77be203b8466cc2eebbfeacf1ff9d9ddd8b4bda5569ece901863b4b86a9a4",
+      "app_privkey": "c5766746aa9acfe3ab65a2228ee2692352cddf1e71051d4195c7c55a2f9584a6",
+      "app_pubkey": "858267457757a987193d5aba45ed087aa0b08a1cfbf3524e3b3943f398c9689c",
+      "user_secret": "7dc77be203b8466cc2eebbfeacf1ff9d9ddd8b4bda5569ece901863b4b86a9a4",
+      "user_pubkey": "a6dd34905cfea8131ce3e592eee3b64a52d7b81e9a677e9ac1a33488b30b52e8",
+      "relay": "wss://relay.damus.io",
+      "balance": 0,
+      "tx_history": {}
+    }
+  }
+}
