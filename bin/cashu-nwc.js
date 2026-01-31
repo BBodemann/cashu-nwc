@@ -44,7 +44,37 @@ async function main() {
     if (process.env.NWC_RELAY) config.nwc_relay = process.env.NWC_RELAY;
     if (process.env.SWEEP_INTERVAL_MS) config.sweep_interval_ms = parseInt(process.env.SWEEP_INTERVAL_MS);
 
-    // Initialize Bridge
+    // Argument Parsing
+    const args = process.argv.slice(2);
+    const command = args[0] || 'start';
+
+    if (command === 'status') {
+        const dbPath = path.resolve(process.cwd(), 'db.json');
+        if (!fs.existsSync(dbPath)) {
+            console.log(JSON.stringify({ connected: false, error: "Database not found" }));
+            process.exit(0);
+        }
+        try {
+            const db = JSON.parse(fs.readFileSync(dbPath));
+            const utxos = db.utxos || [];
+            const nwcInfo = db.nwc_info || {};
+            const pubkeys = Object.keys(nwcInfo);
+            const nwcString = pubkeys.length > 0 ? nwcInfo[pubkeys[0]].nwc_string : null;
+
+            console.log(JSON.stringify({
+                connected: true,
+                nwc_connection_string: nwcString,
+                mint_url: config.mint_url || DEFAULT_MINT,
+                balance_utxos: utxos.length,
+                apps_connected: pubkeys.length
+            }, null, 2));
+        } catch (e) {
+            console.log(JSON.stringify({ connected: false, error: e.message }));
+        }
+        process.exit(0);
+    }
+
+    // Initialize Bridge for Start Command
     const bridge = new CashuNWCBridge(config, path.resolve(process.cwd(), 'db.json'));
 
     // Handle specific signals
