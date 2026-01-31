@@ -31,6 +31,28 @@ You MUST provide configuration via Environment Variables to avoid saving sensiti
 | `MINT_URL` | Cashu Mint URL (see `mints.json`). | No (Default: Minibits) |
 | `NWC_RELAY` | Relay for NWC commands. | No (Default: Damus) |
 
+## Agent Protocols
+
+### 1. Mint Selection Strategy
+The agent should parse `mints.json` to select a mint.
+-   **Mainnet**: Choose a mint with `"recommended": true` and `"risk_tier": "low"`.
+-   **Testing**: Choose a mint with `"risk_tier": "test"`.
+
+**Recommendation**: Default to `https://mint.minibits.cash/Bitcoin` if no specific preference.
+
+### 2. Wallet Creation & Initialization
+A "Wallet" in this bridge is defined by the `db.json` file and the configured `MINT_URL`.
+1.  **Select Mint**: Set `MINT_URL` in environment.
+2.  **Initialize**: Run the bridge (`start`). It will automatically create `db.json` if missing.
+3.  **Verify**: Run `status`. If `connected: true` and `balance_utxos: 0`, the wallet is ready.
+
+### 3. Secure Storage (Critical)
+**WARNING**: This bridge uses **randomly generated secrets** for Cashu tokens. It does **NOT** use a BIP-39 seed phrase.
+-   **The "Private Key" is the `db.json` file itself.**
+-   **Backup**: You must backup `db.json` to preserve funds.
+-   **Encryption**: If storing `db.json` in a cloud environment (S3, etc.), ENCRYPT it first.
+-   **Migration**: To move the wallet, simply move the `db.json` file to the new location.
+
 ## Usage
 
 ### 1. Start the Bridge

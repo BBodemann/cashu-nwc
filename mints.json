@@ -2,16 +2,22 @@
     {
         "url": "https://mint.minibits.cash/Bitcoin",
         "name": "Minibits",
-        "description": "Popular, stable mint."
+        "description": "Popular, stable mint. Recommended for mainnet usage.",
+        "recommended": true,
+        "risk_tier": "low"
     },
     {
         "url": "https://8333.space:3338",
         "name": "8333.space",
-        "description": "High liquidity mint."
+        "description": "High liquidity mint.",
+        "recommended": false,
+        "risk_tier": "medium"
     },
     {
         "url": "https://mint.gandlaf.com",
         "name": "Gandlaf",
-        "description": "Development mint."
+        "description": "Development mint. Use for testing.",
+        "recommended": true,
+        "risk_tier": "test"
     }
 ]
